@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>DYTEX - Nutrição Personalizada</title>
+   
+   <!-- PWA Meta Tags -->
+   <meta name="theme-color" content="#667eea">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+   <meta name="apple-mobile-web-app-title" content="DYTEX">
+   <meta name="description" content="Seu plano personalizado de nutrição e exercícios">
+   
+   <style>
+       * {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+       }
+
+       body {
+           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           min-height: 100vh;
+           color: #333;
+           padding: 20px;
+       }
+
+       .container {
+           max-width: 1200px;
+           margin: 0 auto;
+       }
+
+       .header {
+           text-align: center;
+           margin-bottom: 40px;
+           color: white;
+       }
+
+       .header h1 {
+           font-size: 3rem;
+           margin-bottom: 10px;
+           text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+       }
+
+       .header p {
+           font-size: 1.2rem;
+           opacity: 0.9;
+       }
+
+       .form-container {
+           background: white;
+           border-radius: 20px;
+           padding: 40px;
+           box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+           margin-bottom: 30px;
+       }
+
+       .form-grid {
+           display: grid;
+           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+           gap: 30px;
+           margin-bottom: 30px;
+       }
+
+       .form-group {
+           display: flex;
+           flex-direction: column;
+       }
+
+       .form-group label {
+           font-weight: 600;
+           margin-bottom: 8px;
+           color: #555;
+           font-size: 1.1rem;
+       }
+
+       .form-group input, .form-group select {
+           padding: 15px;
+           border: 2px solid #e1e5e9;
+           border-radius: 10px;
+           font-size: 1rem;
+           transition: all 0.3s ease;
+           background: #f8f9fa;
+       }
+
+       .form-group input:focus, .form-group select:focus {
+           outline: none;
+           border-color: #667eea;
+           box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+       }
+
+       .btn-generate {
+           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+           color: white;
+           border: none;
+           padding: 18px 40px;
+           font-size: 1.2rem;
+           font-weight: 600;
+           border-radius: 50px;
+           cursor: pointer;
+           transition: all 0.3s ease;
+           width: 100%;
+           box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+       }
+
+       .btn-generate:hover {
+           transform: translateY(-3px);
+           box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+       }
+
+       .results {
+           display: none;
+           margin-top: 40px;
+       }
+
+       .results.show {
+           display: block;
+       }
+
+       .plan-section {
+           background: white;
+           border-radius: 15px;
+           padding: 30px;
+           margin-bottom: 20px;
+           box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+           border-left: 5px solid #667eea;
+       }
+
+       .plan-section h3 {
+           color: #667eea;
+           font-size: 1.8rem;
+           margin-bottom: 20px;
+       }
+
+       .calories-info {
+           background: linear-gradient(135deg, #28a745, #20c997);
+           color: white;
+           padding: 20px;
+           border-radius: 15px;
+           text-align: center;
+           margin-bottom: 20px;
+       }
+
+       .calories-info h4 {
+           font-size: 1.5rem;
+           margin-bottom: 10px;
+       }
+
+       .calories-info .number {
+           font-size: 2.5rem;
+           font-weight: bold;
+       }
+
+       .meal-time {
+           background: #f8f9fa;
+           padding: 20px;
+           border-radius: 12px;
+           margin-bottom: 20px;
+           border-left: 4px solid #28a745;
+       }
+
+       .meal-time h4 {
+           color: #28a745;
+           font-size: 1.3rem;
+           margin-bottom: 15px;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+       }
+
+       .meal-options {
+           display: grid;
+           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+           gap: 15px;
+           margin-bottom: 15px;
+       }
+
+       .meal-option {
+           background: white;
+           border: 2px solid #e9ecef;
+           border-radius: 10px;
+           padding: 15px;
+           cursor: pointer;
+           transition: all 0.3s ease;
+           position: relative;
+       }
+
+       .meal-option:hover {
+           border-color: #667eea;
+           transform: translateY(-2px);
+           box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+       }
+
+       .meal-option.selected {
+           border-color: #28a745;
+           background: #f8fff9;
+           box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
+       }
+
+       .meal-option h5 {
+           color: #667eea;
+           margin-bottom: 10px;
+           font-size: 1.1rem;
+       }
+
+       .meal-option.selected h5 {
+           color: #28a745;
+       }
+
+       .food-item {
+           padding: 4px 0;
+           font-size: 0.9rem;
+           color: #666;
+       }
+
+       .option-number {
+           position: absolute;
+           top: -8px;
+           right: -8px;
+           background: #667eea;
+           color: white;
+           border-radius: 50%;
+           width: 24px;
+           height: 24px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 0.8rem;
+           font-weight: bold;
+       }
+
+       .meal-option.selected .option-number {
+           background: #28a745;
+       }
+
+       .selected-indicator {
+           position: absolute;
+           top: 10px;
+           right: 10px;
+           color: #28a745;
+           font-size: 1.2rem;
+       }
+
+       .randomize-btn {
+           background: #ffc107;
+           color: #856404;
+           border: none;
+           padding: 8px 16px;
+           border-radius: 20px;
+           cursor: pointer;
+           font-size: 0.9rem;
+           font-weight: 600;
+           transition: all 0.3s ease;
+       }
+
+       .randomize-btn:hover {
+           background: #ffca2c;
+           transform: scale(1.05);
+       }
+
+       .exercise-item {
+           background: #fff3cd;
+           padding: 15px;
+           border-radius: 10px;
+           margin-bottom: 15px;
+           border-left: 4px solid #ffc107;
+       }
+
+       .exercise-item h5 {
+           color: #856404;
+           margin-bottom: 8px;
+           font-size: 1.1rem;
+       }
+
+       .status {
+           background: #d4edda;
+           color: #155724;
+           padding: 10px 20px;
+           border-radius: 10px;
+           margin: 20px 0;
+           border: 1px solid #c3e6cb;
+       }
+
+       .install-prompt {
+           background: rgba(255,255,255,0.95);
+           padding: 15px 20px;
+           border-radius: 15px;
+           margin-bottom: 20px;
+           text-align: center;
+           box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+       }
+
+       .install-btn {
+           background: #28a745;
+           color: white;
+           border: none;
+           padding: 10px 20px;
+           border-radius: 25px;
+           cursor: pointer;
+           font-weight: 600;
+           margin-top: 10px;
+       }
+
+       @media (max-width: 768px) {
+           .form-grid {
+               grid-template-columns: 1fr;
+           }
+           
+           .header h1 {
+               font-size: 2rem;
+           }
+           
+           .form-container {
+               padding: 20px;
+           }
+
+           .meal-options {
+               grid-template-columns: 1fr;
+           }
+
+           .meal-time h4 {
+               flex-direction: column;
+               align-items: flex-start;
+               gap: 10px;
+           }
+       }
+   </style>
+</head>
+<body>
+   <div class="container">
+       <div class="header">
+           <h1>🥗 DYTEX</h1>
+           <p>Seu plano personalizado de nutrição e exercícios</p>
+       </div>
+
+       <!-- Install App Prompt -->
+       <div id="installPrompt" class="install-prompt" style="display: none;">
+           <h4>📱 Instalar App</h4>
+           <p>Adicione o DYTEX à sua tela inicial para acesso rápido!</p>
+           <button class="install-btn" onclick="installApp()">Instalar Agora</button>
+       </div>
+
+       <div class="form-container">
+           <div class="form-grid">
+               <div class="form-group">
+                   <label for="age">👤 Idade (anos)</label>
+                   <input type="number" id="age" min="16" max="100" required>
+               </div>
+
+               <div class="form-group">
+                   <label for="weight">⚖️ Peso (kg)</label>
+                   <input type="number" id="weight" min="40" max="200" step="0.1" required>
+               </div>
+
+               <div class="form-group">
+                   <label for="height">📏 Altura (cm)</label>
+                   <input type="number" id="height" min="140" max="220" required>
+               </div>
+
+               <div class="form-group">
+                   <label for="gender">👥 Sexo</label>
+                   <select id="gender" required>
+                       <option value="">Selecione...</option>
+                       <option value="male">Masculino</option>
+                       <option value="female">Feminino</option>
+                   </select>
+               </div>
+
+               <div class="form-group">
+                   <label for="wakeTime">🌅 Horário que acorda</label>
+                   <input type="time" id="wakeTime" required>
+               </div>
+
+               <div class="form-group">
+                   <label for="sleepTime">🌙 Horário que dorme</label>
+                   <input type="time" id="sleepTime" required>
+               </div>
+
+               <div class="form-group">
+                   <label for="activity">🏃 Nível de Atividade</label>
+                   <select id="activity" required>
+                       <option value="">Selecione...</option>
+                       <option value="1.2">Sedentário</option>
+                       <option value="1.375">Levemente ativo</option>
+                       <option value="1.55">Moderadamente ativo</option>
+                       <option value="1.725">Muito ativo</option>
+                       <option value="1.9">Extremamente ativo</option>
+                   </select>
+               </div>
+
+               <div class="form-group">
+                   <label for="goal">🎯 Objetivo</label>
+                   <select id="goal" required>
+                       <option value="">Selecione...</option>
+                       <option value="lose">Perder peso</option>
+                       <option value="maintain">Manter peso</option>
+                       <option value="gain">Ganhar peso</option>
+                   </select>
+               </div>
+           </div>
+
+           <button type="button" class="btn-generate" onclick="generatePlan()">
+               ✨ Gerar Meu Plano Personalizado
+           </button>
+
+           <div id="status"></div>
+       </div>
+
+       <div id="results" class="results">
+           <div class="calories-info">
+               <h4>📊 Suas Necessidades Calóricas</h4>
+               <div class="number" id="caloriesNumber">0</div>
+               <p>calorias por dia</p>
+           </div>
+
+           <div class="plan-section">
+               <h3>🍽️ Plano Alimentar</h3>
+               <p style="margin-bottom: 20px; color: #666;">Clique nas opções para escolher suas refeições preferidas ou use o botão "🎲 Sortear" para uma seleção aleatória.</p>
+               <div id="mealPlan"></div>
+           </div>
+
+           <div class="plan-section">
+               <h3>💪 Plano de Exercícios</h3>
+               <div id="exercisePlan"></div>
+           </div>
+       </div>
+   </div>
+
+   <script>
+       // PWA Install functionality
+       let deferredPrompt;
+       let selectedMeals = {};
+
+       window.addEventListener('beforeinstallprompt', (e) => {
+           e.preventDefault();
+           deferredPrompt = e;
+           document.getElementById('installPrompt').style.display = 'block';
+       });
+
+       function installApp() {
+           if (deferredPrompt) {
+               deferredPrompt.prompt();
+               deferredPrompt.userChoice.then((choiceResult) => {
+                   if (choiceResult.outcome === 'accepted') {
+                       console.log('App instalado!');
+                   }
+                   deferredPrompt = null;
+                   document.getElementById('installPrompt').style.display = 'none';
+               });
+           }
+       }
+
+       function showStatus(message, isError = false) {
+           const statusDiv = document.getElementById('status');
+           statusDiv.innerHTML = message;
+           statusDiv.style.background = isError ? '#f8d7da' : '#d4edda';
+           statusDiv.style.color = isError ? '#721c24' : '#155724';
+           statusDiv.style.display = 'block';
+       }
+
+       // Banco de dados de opções de refeições
+       const mealOptions = {
+           'cafe': [
+               {
+                   name: 'Energético Matinal',
+                   foods: ['Aveia com frutas (1 tigela)', 'Iogurte natural (1 pote)', 'Banana (1 unidade)', 'Café com leite (1 xícara)']
+               },
+               {
+                   name: 'Proteico Power',
+                   foods: ['Ovos mexidos (2 unidades)', 'Pão integral (2 fatias)', 'Queijo cottage (2 col. sopa)', 'Suco de laranja (200ml)']
+               },
+               {
+                   name: 'Tropical Fresh',
+                   foods: ['Açaí com granola (1 tigela)', 'Castanhas (20g)', 'Mel (1 col. sopa)', 'Água de coco (200ml)']
+               },
+               {
+                   name: 'Fitness Light',
+                   foods: ['Smoothie de frutas (300ml)', 'Tapioca com queijo (1 unidade)', 'Chia (1 col. sopa)', 'Chá verde (1 xícara)']
+               }
+           ],
+           'lanche_manha': [
+               {
+                   name: 'Mix Nutricional',
+                   foods: ['Castanhas mistas (30g)', 'Maçã (1 unidade)']
+               },
+               {
+                   name: 'Proteína Vegetal',
+                   foods: ['Iogurte grego (1 pote)', 'Granola (2 col. sopa)']
+               },
+               {
+                   name: 'Hidratante Natural',
+                   foods: ['Água de coco (200ml)', 'Biscoito integral (3 unidades)']
+               },
+               {
+                   name: 'Energia Rápida',
+                   foods: ['Banana com aveia (1 unidade)', 'Amendoim (15g)']
+               }
+           ],
+           'almoco': [
+               {
+                   name: 'Brasileiro Completo',
+                   foods: ['Arroz integral (4 col. sopa)', 'Feijão (1 concha)', 'Frango grelhado (120g)', 'Salada verde (1 prato)', 'Brócolis (3 col. sopa)']
+               },
+               {
+                   name: 'Mediterrâneo',
+                   foods: ['Quinoa (4 col. sopa)', 'Grão-de-bico (1 concha)', 'Salmão grelhado (120g)', 'Salada colorida (1 prato)', 'Azeite extra virgem (1 col. sopa)']
+               },
+               {
+                   name: 'Low Carb Power',
+                   foods: ['Couve-flor refogada (4 col. sopa)', 'Lentilha (1 concha)', 'Carne vermelha magra (120g)', 'Rúcula (1 prato)', 'Abacate (1/4 unidade)']
+               },
+               {
+                   name: 'Oriental Fusion',
+                   foods: ['Arroz cateto (4 col. sopa)', 'Missô (1 tigela)', 'Tofu grelhado (120g)', 'Legumes no vapor (1 prato)', 'Algas (1 col. sopa)']
+               }
+           ],
+           'lanche_tarde': [
+               {
+                   name: 'Vitamina Power',
+                   foods: ['Vitamina de frutas (200ml)', 'Biscoito integral (3 unidades)']
+               },
+               {
+                   name: 'Proteína Cremosa',
+                   foods: ['Vitamina de whey protein (200ml)', 'Banana (1 unidade)']
+               },
+               {
+                   name: 'Fibras & Energia',
+                   foods: ['Iogurte com fibras (1 pote)', 'Frutas vermelhas (1 xícara)']
+               },
+               {
+                   name: 'Hidratante Doce',
+                   foods: ['Água saborizada (300ml)', 'Barra de cereal (1 unidade)']
+               }
+           ],
+           'jantar': [
+               {
+                   name: 'Peixe Gourmet',
+                   foods: ['Salmão grelhado (100g)', 'Batata doce (1 unidade)', 'Aspargos (6 unidades)', 'Salada (1 prato)']
+               },
+               {
+                   name: 'Vegetariano Light',
+                   foods: ['Tofu marinado (100g)', 'Purê de abóbora (3 col. sopa)', 'Couve refogada (3 col. sopa)', 'Salada de folhas (1 prato)']
+               },
+               {
+                   name: 'Carne & Legumes',
+                   foods: ['Frango assado (100g)', 'Abobrinha refogada (4 col. sopa)', 'Cenoura no vapor (3 col. sopa)', 'Rúcula (1 prato)']
+               },
+               {
+                   name: 'Detox Noturno',
+                   foods: ['Peixe branco (100g)', 'Salada de pepino (1 prato)', 'Tomate cereja (10 unidades)', 'Chá digestivo (1 xícara)']
+               }
+           ]
+       };
+
+       function generatePlan() {
+           console.log('🚀 Função generatePlan executada!');
+           showStatus('⏳ Gerando seu plano personalizado...');
+
+           // Coletar dados do formulário
+           const age = document.getElementById('age').value;
+           const weight = document.getElementById('weight').value;
+           const height = document.getElementById('height').value;
+           const gender = document.getElementById('gender').value;
+           const wakeTime = document.getElementById('wakeTime').value;
+           const sleepTime = document.getElementById('sleepTime').value;
+           const activity = document.getElementById('activity').value;
+           const goal = document.getElementById('goal').value;
+
+           console.log('📋 Dados coletados:', { age, weight, height, gender, wakeTime, sleepTime, activity, goal });
+
+           // Validar campos obrigatórios
+           if (!age || !weight || !height || !gender || !wakeTime || !sleepTime || !activity || !goal) {
+               showStatus('⚠️ Por favor, preencha todos os campos!', true);
+               return;
+           }
+
+           try {
+               // Calcular TMB (Taxa Metabólica Basal)
+               let bmr;
+               if (gender === 'male') {
+                   bmr = 88.362 + (13.397 * parseFloat(weight)) + (4.799 * parseFloat(height)) - (5.677 * parseInt(age));
+               } else {
+                   bmr = 447.593 + (9.247 * parseFloat(weight)) + (3.098 * parseFloat(height)) - (4.330 * parseInt(age));
+               }
+
+               console.log('📊 TMB calculado:', bmr);
+
+               // Aplicar fator de atividade
+               let calories = bmr * parseFloat(activity);
+
+               // Ajustar baseado no objetivo
+               if (goal === 'lose') {
+                   calories -= 500; // Déficit para perda de peso
+               } else if (goal === 'gain') {
+                   calories += 500; // Superávit para ganho de peso
+               }
+
+               calories = Math.round(calories);
+               console.log('🔥 Calorias finais:', calories);
+
+               // Resetar seleções anteriores
+               selectedMeals = {};
+
+               // Gerar planos
+               const mealPlan = createMealPlan(wakeTime, sleepTime, calories);
+               const exercisePlan = createExercisePlan(activity, goal);
+
+               // Exibir resultados
+               document.getElementById('caloriesNumber').textContent = calories;
+               document.getElementById('mealPlan').innerHTML = mealPlan;
+               document.getElementById('exercisePlan').innerHTML = exercisePlan;
+               
+               document.getElementById('results').classList.add('show');
+               showStatus('✅ Plano gerado com sucesso!');
+               
+               // Scroll suave para os resultados
+               setTimeout(() => {
+                   document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+               }, 500);
+
+               console.log('✅ Plano gerado e exibido com sucesso!');
+
+           } catch (error) {
+               console.error('❌ Erro ao gerar plano:', error);
+               showStatus('❌ Erro ao gerar o plano. Tente novamente.', true);
+           }
+       }
+
+       function createMealPlan(wakeTime, sleepTime, totalCalories) {
+           console.log('🍽️ Criando plano alimentar...');
+
+           // Calcular horários das refeições baseado no horário de acordar
+           const [wakeHour, wakeMin] = wakeTime.split(':').map(Number);
+           const wakeMinutes = wakeHour * 60 + wakeMin;
+
+           const meals = [
+               { key: 'cafe', name: 'Café da Manhã', offset: 30, calories: Math.round(totalCalories * 0.25) },
+               { key: 'lanche_manha', name: 'Lanche da Manhã', offset: 180, calories: Math.round(totalCalories * 0.15) },
+               { key: 'almoco', name: 'Almoço', offset: 300, calories: Math.round(totalCalories * 0.35) },
+               { key: 'lanche_tarde', name: 'Lanche da Tarde', offset: 480, calories: Math.round(totalCalories * 0.15) },
+               { key: 'jantar', name: 'Jantar', offset: 660, calories: Math.round(totalCalories * 0.10) }
+           ];
+
+           return meals.map(meal => {
+               const mealMinutes = wakeMinutes + meal.offset;
+               const mealHour = Math.floor(mealMinutes / 60) % 24;
+               const mealMin = mealMinutes % 60;
+               const timeString = `${mealHour.toString().padStart(2, '0')}:${mealMin.toString().padStart(2, '0')}`;
+
+               const options = mealOptions[meal.key];
+               const optionsHtml = options.map((option, index) => `
+                   <div class="meal-option" onclick="selectMealOption('${meal.key}', ${index})" id="${meal.key}_${index}">
+                       <div class="option-number">${index + 1}</div>
+                       <h5>${option.name}</h5>
+                       ${option.foods.map(food => `<div class="food-item">${food}</div>`).join('')}
+                   </div>
+               `).join('');
+
+               return `
+                   <div class="meal-time">
+                       <h4>
+                           ${meal.name} - ${timeString}
+                           <button class="randomize-btn" onclick="randomizeMeal('${meal.key}')">🎲 Sortear</button>
+                       </h4>
+                       <div class="meal-options" id="${meal.key}_options">
+                           ${optionsHtml}
+                       </div>
+                       <p style="margin-top: 15px;"><strong>Meta calórica: ${meal.calories} kcal</strong></p>
+                   </div>
+               `;
+           }).join('');
+       }
+
+       function selectMealOption(mealKey, optionIndex) {
+           // Remove seleção anterior
+           const previousSelected = document.querySelector(`#${mealKey}_options .meal-option.selected`);
+           if (previousSelected) {
+               previousSelected.classList.remove('selected');
+               const indicator = previousSelected.querySelector('.selected-indicator');
+               if (indicator) indicator.remove();
+           }
+
+           // Adiciona nova seleção
+           const newSelected = document.getElementById(`${mealKey}_${optionIndex}`);
+           newSelected.classList.add('selected');
+           
+           // Adiciona indicador visual
+           const indicator = document.createElement('div');
+           indicator.className = 'selected-indicator';
+           indicator.innerHTML = '✓';
+           newSelected.appendChild(indicator);
+
+           // Salva a seleção
+           selectedMeals[mealKey] = optionIndex;
+           console.log('🍽️ Refeição selecionada:', mealKey, optionIndex);
+       }
+
+       function randomizeMeal(mealKey) {
+           const optionsContainer = document.getElementById(`${mealKey}_options`);
+           const options = optionsContainer.querySelectorAll('.meal-option');
+           const randomIndex = Math.floor(Math.random() * options.length);
+           
+           selectMealOption(mealKey, randomIndex);
+           
+           // Efeito visual de "sorteio"
+           options.forEach((option, index) => {
+               option.style.transform = 'scale(0.95)';
+               setTimeout(() => {
+                   option.style.transform = 'scale(1)';
+                   if (index === randomIndex) {
+                       option.style.transform = 'scale(1.05)';
+                       setTimeout(() => {
+                           option.style.transform = 'scale(1)';
+                       }, 200);
+                   }
+               }, 50 * index);
+           });
+       }
+
+       function createExercisePlan(activityLevel, goal) {
+           console.log('💪 Criando plano de exercícios...');
+
+           const activityPlans = {
+               '1.2': [ // Sedentário
+                   { name: 'Caminhada leve', duration: '20-30 min', frequency: '3x por semana' },
+                   { name: 'Alongamento', duration: '10-15 min', frequency: 'Diariamente' },
+                   { name: 'Exercícios respiratórios', duration: '5-10 min', frequency: 'Diariamente' }
+               ],
+               '1.375': [ // Levemente ativo
+                   { name: 'Caminhada rápida', duration: '30-40 min', frequency: '4x por semana' },
+                   { name: 'Exercícios funcionais', duration: '20-30 min', frequency: '2x por semana' },
+                   { name: 'Yoga/Pilates', duration: '45 min', frequency: '2x por semana' }
+               ],
+               '1.55': [ // Moderadamente ativo
+                   { name: 'Corrida leve', duration: '30-40 min', frequency: '3x por semana' },
+                   { name: 'Musculação', duration: '45-60 min', frequency: '3x por semana' },
+                   { name: 'Natação', duration: '30-45 min', frequency: '2x por semana' }
+               ],
+               '1.725': [ // Muito ativo
+                   { name: 'Corrida moderada', duration: '40-50 min', frequency: '4x por semana' },
+                   { name: 'Treino de força', duration: '60-90 min', frequency: '4x por semana' },
+                   { name: 'HIIT', duration: '20-30 min', frequency: '2x por semana' }
+               ],
+               '1.9': [ // Extremamente ativo
+                   { name: 'Corrida intensa', duration: '45-60 min', frequency: '5x por semana' },
+                   { name: 'Treino avançado', duration: '90-120 min', frequency: '5x por semana' },
+                   { name: 'Treino específico', duration: '60-90 min', frequency: '3x por semana' }
+               ]
+           };
+
+           const exercises = activityPlans[activityLevel] || activityPlans['1.375'];
+
+           return exercises.map(exercise => `
+               <div class="exercise-item">
+                   <h5>${exercise.name}</h5>
+                   <p><strong>Duração:</strong> ${exercise.duration}</p>
+                   <p><strong>Frequência:</strong> ${exercise.frequency}</p>
+               </div>
+           `).join('');
+       }
+
+       // Service Worker para PWA
+       if ('serviceWorker' in navigator) {
+           window.addEventListener('load', () => {
+               const swCode = `
+                   const CACHE_NAME = 'dytex-v1';
+                   const urlsToCache = ['/'];
+                   
+                   self.addEventListener('install', (event) => {
+                       event.waitUntil(
+                           caches.open(CACHE_NAME)
+                               .then((cache) => cache.addAll(urlsToCache))
+                       );
+                   });
+                   
+                   self.addEventListener('fetch', (event) => {
+                       event.respondWith(
+                           caches.match(event.request)
+                               .then((response) => response || fetch(event.request))
+                       );
+                   });
+               `;
+               
+               const blob = new Blob([swCode], { type: 'application/javascript' });
+               const swUrl = URL.createObjectURL(blob);
+               
+               navigator.serviceWorker.register(swUrl)
+                   .then(() => console.log('SW registrado'))
+                   .catch(() => console.log('SW falhou'));
+           });
+       }
+
+       // Teste se o JavaScript está carregando
+       console.log('🎯 JavaScript carregado com sucesso!');
+       showStatus('📱 Sistema carregado - preencha os campos e clique no botão!');
+   </script>
+</body>
+</html>
