@@ -170,7 +170,7 @@
            align-items: center;
        }
 
-       .meal-options {
+       .main-options {
            display: grid;
            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
            gap: 15px;
@@ -226,11 +226,6 @@
            font-weight: bold;
        }
 
-       .meal-option.dimmed {
-           opacity: 0.6;
-           transform: scale(0.98);
-       }
-
        .meal-option h5 {
            color: #667eea;
            margin-bottom: 10px;
@@ -277,6 +272,73 @@
            right: 10px;
            color: #28a745;
            font-size: 1.2rem;
+       }
+
+       /* Estilos para as opções extras */
+       .more-options-container {
+           margin-top: 20px;
+       }
+
+       .show-more-btn {
+           background: #f8f9fa;
+           border: 2px dashed #dee2e6;
+           border-radius: 10px;
+           padding: 20px;
+           cursor: pointer;
+           transition: all 0.3s ease;
+           text-align: center;
+           font-size: 1.1rem;
+           color: #6c757d;
+           font-weight: 600;
+       }
+
+       .show-more-btn:hover {
+           border-color: #667eea;
+           color: #667eea;
+           background: #f5f7ff;
+       }
+
+       .show-more-btn.active {
+           background: #667eea;
+           color: white;
+           border-color: #667eea;
+       }
+
+       .extra-options {
+           display: none;
+           background: #f8f9fa;
+           border: 2px solid #e9ecef;
+           border-radius: 10px;
+           padding: 20px;
+           margin-top: 15px;
+           animation: slideDown 0.3s ease;
+       }
+
+       .extra-options.show {
+           display: block;
+       }
+
+       .extra-options h5 {
+           color: #667eea;
+           margin-bottom: 15px;
+           font-size: 1.1rem;
+       }
+
+       .extra-options-grid {
+           display: grid;
+           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+           gap: 10px;
+       }
+
+       @keyframes slideDown {
+           from {
+               opacity: 0;
+               transform: translateY(-10px);
+           }
+           to {
+               opacity: 1;
+               transform: translateY(0);
+           }
        }
 
        .randomize-btn {
@@ -367,7 +429,11 @@
                padding: 20px;
            }
 
-           .meal-options {
+           .main-options {
+               grid-template-columns: 1fr;
+           }
+
+           .extra-options-grid {
                grid-template-columns: 1fr;
            }
 
@@ -473,7 +539,7 @@
 
            <div class="plan-section">
                <h3>🍽️ Plano Alimentar</h3>
-               <p style="margin-bottom: 20px; color: #666;">As opções destacadas em laranja são recomendadas pela IA baseado no seu perfil. Clique para escolher ou use o botão "🎲 Sortear".</p>
+               <p style="margin-bottom: 20px; color: #666;">As opções em destaque são recomendadas pela IA. Escolha uma das 3 principais ou explore mais opções clicando no "+".</p>
                <div id="mealPlan"></div>
            </div>
 
@@ -906,16 +972,73 @@
                var options = mealOptions[meal.key];
                var aiRecommendedIndex = aiRecommendations[meal.key];
                
-               var optionsHtml = options.map(function(option, index) {
-                   var isAIRecommended = index === aiRecommendedIndex;
-                   var aiClass = isAIRecommended ? 'ai-recommended' : 'dimmed';
-                   var aiBadge = isAIRecommended ? '<div class="ai-badge">🤖 IA Recomenda</div>' : '';
+               // Separar as 3 principais opções das outras
+               var mainOptions = [];
+               var extraOptions = [];
+               
+               // Primeira opção: recomendação da IA (sempre em destaque)
+               mainOptions.push({
+                   option: options[aiRecommendedIndex],
+                   index: aiRecommendedIndex,
+                   isAI: true
+               });
+               
+               // Duas outras opções principais (aleatórias, mas não a da IA)
+               var availableIndexes = [];
+               for (var i = 0; i < options.length; i++) {
+                   if (i !== aiRecommendedIndex) {
+                       availableIndexes.push(i);
+                   }
+               }
+               
+               // Shuffle das opções disponíveis
+               for (var i = availableIndexes.length - 1; i > 0; i--) {
+                   var j = Math.floor(Math.random() * (i + 1));
+                   var temp = availableIndexes[i];
+                   availableIndexes[i] = availableIndexes[j];
+                   availableIndexes[j] = temp;
+               }
+               
+               // Pegar as 2 primeiras como principais
+               mainOptions.push({
+                   option: options[availableIndexes[0]],
+                   index: availableIndexes[0],
+                   isAI: false
+               });
+               mainOptions.push({
+                   option: options[availableIndexes[1]],
+                   index: availableIndexes[1],
+                   isAI: false
+               });
+               
+               // O resto vai para opções extras
+               for (var i = 2; i < availableIndexes.length; i++) {
+                   extraOptions.push({
+                       option: options[availableIndexes[i]],
+                       index: availableIndexes[i],
+                       isAI: false
+                   });
+               }
+
+               // Criar HTML das opções principais
+               var mainOptionsHtml = mainOptions.map(function(item) {
+                   var aiClass = item.isAI ? 'ai-recommended' : '';
+                   var aiBadge = item.isAI ? '<div class="ai-badge">🤖 IA Recomenda</div>' : '';
                    
-                   return '<div class="meal-option ' + aiClass + '" onclick="selectMealOption(\'' + meal.key + '\', ' + index + ')" id="' + meal.key + '_' + index + '">' +
-                       '<div class="option-number">' + (index + 1) + '</div>' +
+                   return '<div class="meal-option ' + aiClass + '" onclick="selectMealOption(\'' + meal.key + '\', ' + item.index + ')" id="' + meal.key + '_' + item.index + '">' +
+                       '<div class="option-number">' + (item.index + 1) + '</div>' +
                        aiBadge +
-                       '<h5>' + option.name + '</h5>' +
-                       option.foods.map(function(food) { return '<div class="food-item">' + food + '</div>'; }).join('') +
+                       '<h5>' + item.option.name + '</h5>' +
+                       item.option.foods.map(function(food) { return '<div class="food-item">' + food + '</div>'; }).join('') +
+                       '</div>';
+               }).join('');
+
+               // Criar HTML das opções extras
+               var extraOptionsHtml = extraOptions.map(function(item) {
+                   return '<div class="meal-option" onclick="selectMealOption(\'' + meal.key + '\', ' + item.index + ')" id="' + meal.key + '_' + item.index + '">' +
+                       '<div class="option-number">' + (item.index + 1) + '</div>' +
+                       '<h5>' + item.option.name + '</h5>' +
+                       item.option.foods.map(function(food) { return '<div class="food-item">' + food + '</div>'; }).join('') +
                        '</div>';
                }).join('');
 
@@ -923,44 +1046,60 @@
                    '<h4>' + meal.name + ' - ' + timeString +
                    '<button class="randomize-btn" onclick="randomizeMeal(\'' + meal.key + '\')">🎲 Sortear</button>' +
                    '</h4>' +
-                   '<div class="meal-options" id="' + meal.key + '_options">' +
-                   optionsHtml +
+                   '<div class="main-options">' +
+                   mainOptionsHtml +
+                   '</div>' +
+                   '<div class="more-options-container">' +
+                   '<div class="show-more-btn" onclick="toggleMoreOptions(\'' + meal.key + '\')">' +
+                   '<span id="' + meal.key + '_toggle_text">+ Ver mais ' + extraOptions.length + ' opções</span>' +
+                   '</div>' +
+                   '<div class="extra-options" id="' + meal.key + '_extra">' +
+                   '<h5>📋 Mais Opções Disponíveis</h5>' +
+                   '<div class="extra-options-grid">' +
+                   extraOptionsHtml +
+                   '</div>' +
+                   '</div>' +
                    '</div>' +
                    '<p style="margin-top: 15px;"><strong>Meta calórica: ' + meal.calories + ' kcal</strong></p>' +
                    '</div>';
            }).join('');
        }
 
-       function selectMealOption(mealKey, optionIndex) {
-           // Remove seleção anterior
-           var previousSelected = document.querySelector('#' + mealKey + '_options .meal-option.selected');
-           if (previousSelected) {
-               previousSelected.classList.remove('selected');
-               var indicator = previousSelected.querySelector('.selected-indicator');
-               if (indicator) indicator.remove();
+       function toggleMoreOptions(mealKey) {
+           var extraOptions = document.getElementById(mealKey + '_extra');
+           var toggleBtn = document.querySelector('#' + mealKey + '_toggle_text');
+           var btnContainer = document.querySelector('#' + mealKey + '_extra').parentElement.querySelector('.show-more-btn');
+           
+           if (extraOptions.classList.contains('show')) {
+               extraOptions.classList.remove('show');
+               toggleBtn.textContent = toggleBtn.textContent.replace('- Ocultar', '+ Ver mais');
+               btnContainer.classList.remove('active');
+           } else {
+               extraOptions.classList.add('show');
+               toggleBtn.textContent = toggleBtn.textContent.replace('+ Ver mais', '- Ocultar');
+               btnContainer.classList.add('active');
            }
+       }
 
-           // Remove efeito dimmed de todas as opções
-           var allOptions = document.querySelectorAll('#' + mealKey + '_options .meal-option');
-           for (var i = 0; i < allOptions.length; i++) {
-               allOptions[i].classList.remove('dimmed');
+       function selectMealOption(mealKey, optionIndex) {
+           // Remove seleção anterior de TODAS as opções (principais e extras)
+           var allMealOptions = document.querySelectorAll('[id^="' + mealKey + '_"]:not([id*="_toggle"]):not([id*="_extra"])');
+           for (var i = 0; i < allMealOptions.length; i++) {
+               allMealOptions[i].classList.remove('selected');
+               var indicator = allMealOptions[i].querySelector('.selected-indicator');
+               if (indicator) indicator.remove();
            }
 
            // Adiciona nova seleção
            var newSelected = document.getElementById(mealKey + '_' + optionIndex);
-           newSelected.classList.add('selected');
-           
-           // Adiciona indicador visual
-           var indicator = document.createElement('div');
-           indicator.className = 'selected-indicator';
-           indicator.innerHTML = '✓';
-           newSelected.appendChild(indicator);
-
-           // Reaplica efeito dimmed nas opções não selecionadas
-           for (var i = 0; i < allOptions.length; i++) {
-               if (i !== optionIndex && !allOptions[i].classList.contains('ai-recommended')) {
-                   allOptions[i].classList.add('dimmed');
-               }
+           if (newSelected) {
+               newSelected.classList.add('selected');
+               
+               // Adiciona indicador visual
+               var indicator = document.createElement('div');
+               indicator.className = 'selected-indicator';
+               indicator.innerHTML = '✓';
+               newSelected.appendChild(indicator);
            }
 
            // Salva a seleção
@@ -969,26 +1108,33 @@
        }
 
        function randomizeMeal(mealKey) {
-           var optionsContainer = document.getElementById(mealKey + '_options');
-           var options = optionsContainer.querySelectorAll('.meal-option');
-           var randomIndex = Math.floor(Math.random() * options.length);
+           var allOptions = document.querySelectorAll('[id^="' + mealKey + '_"]:not([id*="_toggle"]):not([id*="_extra"])');
+           var availableIndexes = [];
+           
+           for (var i = 0; i < allOptions.length; i++) {
+               var id = allOptions[i].id;
+               var index = parseInt(id.split('_')[id.split('_').length - 1]);
+               availableIndexes.push(index);
+           }
+           
+           var randomIndex = availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
            
            selectMealOption(mealKey, randomIndex);
            
            // Efeito visual de "sorteio"
-           for (var i = 0; i < options.length; i++) {
-               (function(index) {
-                   options[index].style.transform = 'scale(0.95)';
+           for (var i = 0; i < allOptions.length; i++) {
+               (function(index, element) {
+                   element.style.transform = 'scale(0.95)';
                    setTimeout(function() {
-                       options[index].style.transform = 'scale(1)';
-                       if (index === randomIndex) {
-                           options[index].style.transform = 'scale(1.05)';
+                       element.style.transform = 'scale(1)';
+                       if (element.id === mealKey + '_' + randomIndex) {
+                           element.style.transform = 'scale(1.05)';
                            setTimeout(function() {
-                               options[index].style.transform = 'scale(1)';
+                               element.style.transform = 'scale(1)';
                            }, 200);
                        }
                    }, 50 * index);
-               })(i);
+               })(i, allOptions[i]);
            }
        }
 
